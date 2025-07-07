@@ -1,28 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NutriAxis</title>
-  <meta name="description" content="NutriAxis is a powered wellness platform that generates personalized nutrition and training programs, detects postural misalignments, accounts for the female cycle and health needs, and builds a safe, goal-oriented plan for optimal balance and long-term results.">
-  <link rel="stylesheet" href="style.css">
+  <meta name="description" content="NutriAxis — платформа сбалансированного питания и тренировок, учитывающая женский цикл, здоровье и цели.">
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <header>
     <h1>NutriAxis</h1>
-    <p class="tagline">Powered wellness, built for balance.</p>
+    <p class="tagline">Осознанный баланс. Персонально для тебя.</p>
     <label class="theme-toggle">
       <input type="checkbox" id="themeToggle" />
-      <span>Toggle style</span>
+      <span>Сменить стиль</span>
     </label>
   </header>
-<label>
-  <input type="checkbox" id="showDetails" />
-  Показать подробности расчёта
-</label>
+
   <main>
     <section class="calculator">
       <h2>Калькулятор КБЖУ</h2>
+
+      <label>
+        <input type="checkbox" id="showDetails" />
+        Показать подробности расчёта
+      </label>
 
       <label>Пол:
         <select id="gender">
@@ -54,82 +57,83 @@
       </label>
 
       <button onclick="calculate()">Рассчитать</button>
+      <button class="reset-btn" onclick="resetResult()">Сбросить</button>
       <div id="result"></div>
     </section>
   </main>
 
   <footer>
-    <a href="/legal/disclaimer.html">Disclaimer</a> |
-    <a href="/legal/privacy.html">Privacy Policy</a> |
-    <a href="/legal/terms.html">Terms of Use</a>
+    <a href="/legal/disclaimer.html">Отказ от ответственности</a> |
+    <a href="/legal/privacy.html">Политика конфиденциальности</a> |
+    <a href="/legal/terms.html">Условия использования</a>
   </footer>
 
   <script>
-  function calculate() {
-    const gender = document.getElementById('gender').value;
-    const age = +document.getElementById('age').value;
-    const height = +document.getElementById('height').value;
-    const weight = +document.getElementById('weight').value;
-    const activity = +document.getElementById('activity').value;
-    const goal = document.getElementById('goal').value;
-    const showDetails = document.getElementById('showDetails').checked;
+    function calculate() {
+      const gender = document.getElementById('gender').value;
+      const age = +document.getElementById('age').value;
+      const height = +document.getElementById('height').value;
+      const weight = +document.getElementById('weight').value;
+      const activity = +document.getElementById('activity').value;
+      const goal = document.getElementById('goal').value;
+      const showDetails = document.getElementById('showDetails').checked;
 
-    let bmr;
+      let bmr;
+      if (gender === 'female') {
+        bmr = 655.1 + (9.563 * weight) + (1.850 * height) - (4.676 * age);
+      } else {
+        bmr = 66.5 + (13.75 * weight) + (5.003 * height) - (6.755 * age);
+      }
 
-    if (gender === 'female') {
-      bmr = 655.1 + (9.563 * weight) + (1.850 * height) - (4.676 * age);
-    } else {
-      bmr = 66.5 + (13.75 * weight) + (5.003 * height) - (6.755 * age);
-    }
+      const tdee = bmr * activity;
 
-    const tdee = bmr * activity;
+      let calories = tdee;
+      if (goal === 'loss') calories -= 500;
+      if (goal === 'gain') calories += 300;
 
-    let calories = tdee;
-    if (goal === 'loss') calories -= 500;
-    if (goal === 'gain') calories += 300;
+      const protein = weight * 1.5;
+      const fat = weight * 0.8;
+      const carbs = (calories - (protein * 4 + fat * 9)) / 4;
 
-    const protein = weight * 1.5;
-    const fat = weight * 0.8;
-    const carbs = (calories - (protein * 4 + fat * 9)) / 4;
-
-    let output = `
-      <strong>Результаты:</strong><br>
-      Калории: ${Math.round(calories)} ккал<br>
-      Белки: ${Math.round(protein)} г<br>
-      Жиры: ${Math.round(fat)} г<br>
-      Углеводы: ${Math.round(carbs)} г
-    `;
-
-    if (showDetails) {
-      output += `
-        <hr>
-        <strong>Подробности расчёта:</strong><br>
-        BMR (основной обмен): ${Math.round(bmr)} ккал<br>
-        TDEE (с учётом активности): ${Math.round(tdee)} ккал<br>
-        Цель: ${goal === 'loss' ? 'Похудение' : goal === 'gain' ? 'Набор массы' : 'Поддержание'}<br>
-        Итоговая калорийность: ${Math.round(calories)} ккал
+      let output = `
+        <strong>Результаты:</strong><br>
+        Калории: ${Math.round(calories)} ккал<br>
+        Белки: ${Math.round(protein)} г<br>
+        Жиры: ${Math.round(fat)} г<br>
+        Углеводы: ${Math.round(carbs)} г
       `;
+
+      if (showDetails) {
+        output += `
+          <hr>
+          <strong>Подробности расчёта:</strong><br>
+          BMR (основной обмен): ${Math.round(bmr)} ккал<br>
+          TDEE (с учётом активности): ${Math.round(tdee)} ккал<br>
+          Цель: ${goal === 'loss' ? 'Похудение' : goal === 'gain' ? 'Набор массы' : 'Поддержание'}<br>
+          Итоговая калорийность: ${Math.round(calories)} ккал
+        `;
+      }
+
+      document.getElementById('result').innerHTML = output;
+      localStorage.setItem('nutriaxisResult', output);
     }
 
-    document.getElementById('result').innerHTML = output;
-
-    // Сохраняем результат в localStorage
-    localStorage.setItem('nutriaxisResult', output);
-  }
-
-  // Переключение тем
-  const toggle = document.getElementById('themeToggle');
-  toggle.addEventListener('change', () => {
-    document.body.classList.toggle('futurism');
-  });
-
-  // Восстановление результата из localStorage при загрузке страницы
-  window.addEventListener('DOMContentLoaded', () => {
-    const saved = localStorage.getItem('nutriaxisResult');
-    if (saved) {
-      document.getElementById('result').innerHTML = saved;
+    function resetResult() {
+      localStorage.removeItem('nutriaxisResult');
+      document.getElementById('result').innerHTML = '';
     }
-  });
+
+    const toggle = document.getElementById('themeToggle');
+    toggle.addEventListener('change', () => {
+      document.body.classList.toggle('futurism');
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const saved = localStorage.getItem('nutriaxisResult');
+      if (saved) {
+        document.getElementById('result').innerHTML = saved;
+      }
+    });
   </script>
 </body>
 </html>
