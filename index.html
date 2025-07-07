@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NutriAxis</title>
+  <meta name="description" content="NutriAxis is a powered wellness platform that generates personalized nutrition and training programs, detects postural misalignments, accounts for the female cycle and health needs, and builds a safe, goal-oriented plan for optimal balance and long-term results.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>NutriAxis</h1>
+    <p class="tagline">Powered wellness, built for balance.</p>
+    <label class="theme-toggle">
+      <input type="checkbox" id="themeToggle" />
+      <span>Toggle style</span>
+    </label>
+  </header>
+
+  <main>
+    <section class="calculator">
+      <h2>Калькулятор КБЖУ</h2>
+      <label>Возраст: <input type="number" id="age"></label>
+      <label>Рост (см): <input type="number" id="height"></label>
+      <label>Вес (кг): <input type="number" id="weight"></label>
+      <label>Цель:
+        <select id="goal">
+          <option value="loss">Похудение</option>
+          <option value="maintain">Поддержание</option>
+          <option value="gain">Набор массы</option>
+        </select>
+      </label>
+      <button onclick="calculate()">Рассчитать</button>
+      <div id="result"></div>
+    </section>
+  </main>
+
+  <footer>
+    <a href="/legal/disclaimer.html">Disclaimer</a> |
+    <a href="/legal/privacy.html">Privacy Policy</a> |
+    <a href="/legal/terms.html">Terms of Use</a>
+  </footer>
+
+  <script>
+    function calculate() {
+      const age = +document.getElementById('age').value;
+      const height = +document.getElementById('height').value;
+      const weight = +document.getElementById('weight').value;
+      const goal = document.getElementById('goal').value;
+
+      let bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+      if (goal === 'loss') bmr -= 500;
+      if (goal === 'gain') bmr += 300;
+
+      const protein = weight * 1.5;
+      const fat = weight * 0.8;
+      const carbs = (bmr - (protein * 4 + fat * 9)) / 4;
+
+      document.getElementById('result').innerHTML = `
+        <strong>Результаты:</strong><br>
+        Калории: ${Math.round(bmr)} ккал<br>
+        Белки: ${Math.round(protein)} г<br>
+        Жиры: ${Math.round(fat)} г<br>
+        Углеводы: ${Math.round(carbs)} г
+      `;
+    }
+
+    // Theme toggle
+    const toggle = document.getElementById('themeToggle');
+    toggle.addEventListener('change', () => {
+      document.body.classList.toggle('futurism');
+    });
+  </script>
+</body>
+</html>
