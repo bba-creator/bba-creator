@@ -20,9 +20,28 @@
   <main>
     <section class="calculator">
       <h2>Калькулятор КБЖУ</h2>
+
+      <label>Пол:
+        <select id="gender">
+          <option value="female">Женщина</option>
+          <option value="male">Мужчина</option>
+        </select>
+      </label>
+
       <label>Возраст: <input type="number" id="age"></label>
       <label>Рост (см): <input type="number" id="height"></label>
       <label>Вес (кг): <input type="number" id="weight"></label>
+
+      <label>Физическая активность:
+        <select id="activity">
+          <option value="1.2">Минимальная (сидячая работа)</option>
+          <option value="1.375">Низкая (1–2 тренировки в неделю)</option>
+          <option value="1.55">Средняя (3–4 тренировки)</option>
+          <option value="1.725">Высокая (5–6 тренировок)</option>
+          <option value="1.9">Очень высокая (тяжёлая физ. работа)</option>
+        </select>
+      </label>
+
       <label>Цель:
         <select id="goal">
           <option value="loss">Похудение</option>
@@ -30,6 +49,7 @@
           <option value="gain">Набор массы</option>
         </select>
       </label>
+
       <button onclick="calculate()">Рассчитать</button>
       <div id="result"></div>
     </section>
@@ -41,34 +61,45 @@
     <a href="/legal/terms.html">Terms of Use</a>
   </footer>
 
-<script>
-  function calculate() {
-    const age = +document.getElementById('age').value;
-    const height = +document.getElementById('height').value;
-    const weight = +document.getElementById('weight').value;
-    const goal = document.getElementById('goal').value;
+  <script>
+    function calculate() {
+      const gender = document.getElementById('gender').value;
+      const age = +document.getElementById('age').value;
+      const height = +document.getElementById('height').value;
+      const weight = +document.getElementById('weight').value;
+      const activity = +document.getElementById('activity').value;
+      const goal = document.getElementById('goal').value;
 
-    // Формула Харриса-Бенедикта для женщин
-    let bmr = 655.1 + (9.563 * weight) + (1.850 * height) - (4.676 * age);
+      let bmr;
 
-    // Коррекция под цель
-    if (goal === 'loss') bmr -= 500;
-    if (goal === 'gain') bmr += 300;
+      if (gender === 'female') {
+        bmr = 655.1 + (9.563 * weight) + (1.850 * height) - (4.676 * age);
+      } else {
+        bmr = 66.5 + (13.75 * weight) + (5.003 * height) - (6.755 * age);
+      }
 
-    const protein = weight * 1.5;
-    const fat = weight * 0.8;
-    const carbs = (bmr - (protein * 4 + fat * 9)) / 4;
+      let calories = bmr * activity;
 
-    document.getElementById('result').innerHTML = `
-      <strong>Результаты:</strong><br>
-      Калории: ${Math.round(bmr)} ккал<br>
-      Белки: ${Math.round(protein)} г<br>
-      Жиры: ${Math.round(fat)} г<br>
-      Углеводы: ${Math.round(carbs)} г
-    `;
-  }
+      if (goal === 'loss') calories -= 500;
+      if (goal === 'gain') calories += 300;
 
-  // Переключение тем
-  const toggle = document.get
+      const protein = weight * 1.5;
+      const fat = weight * 0.8;
+      const carbs = (calories - (protein * 4 + fat * 9)) / 4;
+
+      document.getElementById('result').innerHTML = `
+        <strong>Результаты:</strong><br>
+        Калории: ${Math.round(calories)} ккал<br>
+        Белки: ${Math.round(protein)} г<br>
+        Жиры: ${Math.round(fat)} г<br>
+        Углеводы: ${Math.round(carbs)} г
+      `;
+    }
+
+    const toggle = document.getElementById('themeToggle');
+    toggle.addEventListener('change', () => {
+      document.body.classList.toggle('futurism');
+    });
+  </script>
 </body>
 </html>
