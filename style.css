@@ -1,0 +1,64 @@
+/* 🌿 Минимализм по умолчанию */
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #f9f9f9;
+  color: #111;
+  margin: 0;
+  padding: 2rem;
+  transition: all 0.3s ease;
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+.theme-toggle {
+  font-size: 0.9rem;
+}
+h1 {
+  font-size: 2rem;
+  margin: 0;
+}
+main {
+  max-width: 500px;
+}
+input, select {
+  padding: 0.5rem;
+  margin-top: 0.25rem;
+  margin-bottom: 1rem;
+  width: 100%;
+  font-size: 1rem;
+}
+button {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  background-color: #111;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+#result {
+  background: #eee;
+  padding: 1rem;
+  border-radius: 6px;
+  margin-top: 1rem;
+}
+
+/* 🚀 Футуризм */
+body.futurism {
+  background-color: #0e0e1a;
+  color: #00f0ff;
+  font-family: 'Orbitron', sans-serif;
+}
+body.futurism button {
+  background-color: #00f0ff;
+  color: #0e0e1a;
+}
+body.futurism #result {
+  background: rgba(0, 240, 255, 0.1);
+  border: 1px solid #00f0ff44;
+}
+body.futurism a {
+  color: #00f0ff;
+}
