@@ -73,7 +73,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script>
-    // Конфиг из Firebase (проверь storageBucket!)
+    // ВАЖНО: storageBucket должен быть "bba-creator.appspot.com"
     const firebaseConfig = {
       apiKey: "AIzaSyCptJ1iTweRdZE3hxaepb6Wx2rdhTCYfDo",
       authDomain: "bba-creator.firebaseapp.com",
@@ -84,7 +84,8 @@
       measurementId: "G-FEKG0B970P"
     };
     firebase.initializeApp(firebaseConfig);
-    // Firestore можно использовать дальше (пример): const db = firebase.firestore();
+    // Firestore и Auth готовы к использованию (если потребуется)
+    // Пример: const db = firebase.firestore();
   </script>
 
   <script>
