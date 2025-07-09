@@ -16,12 +16,12 @@
   <main>
     <div id="userInfo" style="margin-bottom:2rem;"></div>
     <hr>
-    <h3>Последний расчёт КБЖУ:</h3>
-    <div id="lastCalculation"></div>
-    <button onclick="location.href='index.html'">Рассчитать заново</button>
+    <h3>Последние расчёты КБЖУ:</h3>
+    <ul id="calculationList"></ul>
+    <button onclick="location.href='index.html'">Новый расчёт КБЖУ</button>
     <hr>
-    <h3>Последний анализ рациона:</h3>
-    <div id="lastAnalyze"></div>
+    <h3>Последние анализы рациона:</h3>
+    <ul id="analyzeList"></ul>
     <button onclick="location.href='analyze.html'">Новый анализ</button>
   </main>
   <footer>
@@ -30,7 +30,7 @@
     <a href="/legal/terms.html">Условия использования</a>
   </footer>
   <script>
-    // Firebase config (тот же, что и на остальных)
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyCptJ1iTweRdZE3hxaepb6Wx2rdhTCYfDo",
       authDomain: "bba-creator.firebaseapp.com",
@@ -48,37 +48,26 @@
         window.location.href = "auth.html";
         return;
       }
-      // Информация о пользователе
       document.getElementById('userInfo').innerHTML =
         `<b>Email:</b> ${user.email}<br><b>UID:</b> ${user.uid}`;
-      // Последний расчёт (если уже реализовано сохранение)
-      try {
-        const calcSnap = await db.collection('users').doc(user.uid)
-          .collection('calculations').orderBy('date', 'desc').limit(1).get();
-        if (!calcSnap.empty) {
-          const c = calcSnap.docs[0].data();
-          document.getElementById('lastCalculation').innerHTML =
-            `Дата: ${c.date || "?"}<br>Калории: ${c.calories} ккал<br>Б:${c.protein} Ж:${c.fat} У:${c.carbs}`;
-        } else {
-          document.getElementById('lastCalculation').innerHTML = "Нет данных.";
-        }
-      } catch (e) {
-        document.getElementById('lastCalculation').innerHTML = "Ошибка загрузки расчётов.";
-      }
-      // Последний анализ
-      try {
-        const anSnap = await db.collection('users').doc(user.uid)
-          .collection('analyzes').orderBy('date', 'desc').limit(1).get();
-        if (!anSnap.empty) {
-          const a = anSnap.docs[0].data();
-          document.getElementById('lastAnalyze').innerHTML =
-            `Дата: ${a.date || "?"}<br>Описание: ${a.foodText || "Фото"}`;
-        } else {
-          document.getElementById('lastAnalyze').innerHTML = "Нет данных.";
-        }
-      } catch (e) {
-        document.getElementById('lastAnalyze').innerHTML = "Ошибка загрузки анализов.";
-      }
+      // История расчетов
+      const calcSnap = await db.collection('users').doc(user.uid)
+        .collection('calculations').orderBy('date', 'desc').limit(5).get();
+      let calcHtml = '';
+      calcSnap.forEach(doc => {
+        const c = doc.data();
+        calcHtml += `<li>${c.date?.slice(0,16) || ''} | Ккал: ${c.calories}, Б:${c.protein}, Ж:${c.fat}, У:${c.carbs}</li>`;
+      });
+      document.getElementById('calculationList').innerHTML = calcHtml || "Нет данных.";
+      // История анализов
+      const anSnap = await db.collection('users').doc(user.uid)
+        .collection('analyzes').orderBy('date', 'desc').limit(5).get();
+      let anHtml = '';
+      anSnap.forEach(doc => {
+        const a = doc.data();
+        anHtml += `<li>${a.date?.slice(0,16) || ''} | Описание: ${a.foodText ? a.foodText.substring(0,30) + '...' : "Фото"}</li>`;
+      });
+      document.getElementById('analyzeList').innerHTML = anHtml || "Нет данных.";
     });
 
     function logout() {
