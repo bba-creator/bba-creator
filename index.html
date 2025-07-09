@@ -67,106 +67,126 @@
     <a href="/legal/privacy.html">Политика конфиденциальности</a> |
     <a href="/legal/terms.html">Условия использования</a>
   </footer>
+
+  <!-- --- Firebase CDN скрипты --- -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script>
-function calculate() {
-  const gender = document.getElementById('gender').value;
-  const age = +document.getElementById('age').value;
-  const height = +document.getElementById('height').value;
-  const weight = +document.getElementById('weight').value;
-  const activity = +document.getElementById('activity').value;
-  const goal = document.getElementById('goal').value;
-  const showDetails = document.getElementById('showDetails').checked;
+    // Конфиг из Firebase (проверь storageBucket!)
+    const firebaseConfig = {
+      apiKey: "AIzaSyCptJ1iTweRdZE3hxaepb6Wx2rdhTCYfDo",
+      authDomain: "bba-creator.firebaseapp.com",
+      projectId: "bba-creator",
+      storageBucket: "bba-creator.appspot.com",
+      messagingSenderId: "141640866350",
+      appId: "1:141640866350:web:bca3f1d2278165837e1dbf",
+      measurementId: "G-FEKG0B970P"
+    };
+    firebase.initializeApp(firebaseConfig);
+    // Firestore можно использовать дальше (пример): const db = firebase.firestore();
+  </script>
 
-  let bmr;
-  // Формула Mifflin-St Jeor
-  if (gender === 'female') {
-    bmr = 10 * weight + 6.25 * height - 5 * age - 161;
-  } else {
-    bmr = 10 * weight + 6.25 * height - 5 * age + 5;
-  }
+  <script>
+    function calculate() {
+      const gender = document.getElementById('gender').value;
+      const age = +document.getElementById('age').value;
+      const height = +document.getElementById('height').value;
+      const weight = +document.getElementById('weight').value;
+      const activity = +document.getElementById('activity').value;
+      const goal = document.getElementById('goal').value;
+      const showDetails = document.getElementById('showDetails').checked;
 
-  const tdee = bmr * activity;
+      let bmr;
+      // Формула Mifflin-St Jeor
+      if (gender === 'female') {
+        bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+      } else {
+        bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+      }
 
-  // Итоговая калорийность по цели
-  let calories = tdee;
-  let deficit = 0;
-  if (goal === 'loss') {
-    calories -= 300; // теперь дефицит -300 ккал
-    deficit = tdee - calories;
-  }
-  if (goal === 'gain') {
-    calories += 300;
-    deficit = calories - tdee;
-  }
-  if (goal === 'maintain') {
-    deficit = 0;
-  }
+      const tdee = bmr * activity;
 
-  const protein = weight * 1.5;
-  const fat = weight * 0.8;
-  const carbs = (calories - (protein * 4 + fat * 9)) / 4;
+      // Итоговая калорийность по цели
+      let calories = tdee;
+      let deficit = 0;
+      if (goal === 'loss') {
+        calories -= 300; // дефицит -300 ккал
+        deficit = tdee - calories;
+      }
+      if (goal === 'gain') {
+        calories += 300;
+        deficit = calories - tdee;
+      }
+      if (goal === 'maintain') {
+        deficit = 0;
+      }
 
-  let output = `
-    <strong>Результаты:</strong><br>
-    Калории: ${Math.round(calories)} ккал<br>
-    Белки: ${Math.round(protein)} г<br>
-    Жиры: ${Math.round(fat)} г<br>
-    Углеводы: ${Math.round(carbs)} г
-  `;
+      const protein = weight * 1.5;
+      const fat = weight * 0.8;
+      const carbs = (calories - (protein * 4 + fat * 9)) / 4;
 
-  // Предупреждение о минимуме калорий
-  let minCalories = gender === 'female' ? 1200 : 1400;
-  if (calories < minCalories) {
-    output += `
-      <div style="background: #fff9c4; color: #bfa800; border-left: 5px solid #bfa800; padding: 10px; margin-top: 10px; border-radius: 5px;">
-        <strong>Внимание!</strong> Итоговая калорийность (${Math.round(calories)} ккал) ниже безопасного минимума для вашего пола (${minCalories} ккал). 
-        <br>Рекомендуется не опускаться ниже этой границы без наблюдения врача.
-      </div>
-    `;
-  }
+      let output = `
+        <strong>Результаты:</strong><br>
+        Калории: ${Math.round(calories)} ккал<br>
+        Белки: ${Math.round(protein)} г<br>
+        Жиры: ${Math.round(fat)} г<br>
+        Углеводы: ${Math.round(carbs)} г
+      `;
 
-  // Пояснение по дефициту/профициту
-  let deficitText = "";
-  if (goal === 'loss') {
-    deficitText = `Дефицит: ${Math.round(deficit)} ккал`;
-  } else if (goal === 'gain') {
-    deficitText = `Профицит: ${Math.round(deficit)} ккал`;
-  } else {
-    deficitText = `Поддержание текущего веса (дефицита нет)`;
-  }
-  output += `<br><span style="font-size:0.98em; color:#888">${deficitText}</span>`;
+      // Предупреждение о минимуме калорий
+      let minCalories = gender === 'female' ? 1200 : 1400;
+      if (calories < minCalories) {
+        output += `
+          <div style="background: #fff9c4; color: #bfa800; border-left: 5px solid #bfa800; padding: 10px; margin-top: 10px; border-radius: 5px;">
+            <strong>Внимание!</strong> Итоговая калорийность (${Math.round(calories)} ккал) ниже безопасного минимума для вашего пола (${minCalories} ккал). 
+            <br>Рекомендуется не опускаться ниже этой границы без наблюдения врача.
+          </div>
+        `;
+      }
 
-  if (showDetails) {
-    output += `
-      <hr>
-      <strong>Подробности расчёта:</strong><br>
-      BMR (основной обмен): ${Math.round(bmr)} ккал<br>
-      TDEE (с учётом активности): ${Math.round(tdee)} ккал<br>
-      Цель: ${goal === 'loss' ? 'Похудение' : goal === 'gain' ? 'Набор массы' : 'Поддержание'}<br>
-      Итоговая калорийность: ${Math.round(calories)} ккал
-    `;
-  }
+      // Пояснение по дефициту/профициту
+      let deficitText = "";
+      if (goal === 'loss') {
+        deficitText = `Дефицит: ${Math.round(deficit)} ккал`;
+      } else if (goal === 'gain') {
+        deficitText = `Профицит: ${Math.round(deficit)} ккал`;
+      } else {
+        deficitText = `Поддержание текущего веса (дефицита нет)`;
+      }
+      output += `<br><span style="font-size:0.98em; color:#888">${deficitText}</span>`;
 
-  document.getElementById('result').innerHTML = output;
-  localStorage.setItem('nutriaxisResult', output);
-}
+      if (showDetails) {
+        output += `
+          <hr>
+          <strong>Подробности расчёта:</strong><br>
+          BMR (основной обмен): ${Math.round(bmr)} ккал<br>
+          TDEE (с учётом активности): ${Math.round(tdee)} ккал<br>
+          Цель: ${goal === 'loss' ? 'Похудение' : goal === 'gain' ? 'Набор массы' : 'Поддержание'}<br>
+          Итоговая калорийность: ${Math.round(calories)} ккал
+        `;
+      }
 
-function resetResult() {
-  localStorage.removeItem('nutriaxisResult');
-  document.getElementById('result').innerHTML = '';
-}
+      document.getElementById('result').innerHTML = output;
+      localStorage.setItem('nutriaxisResult', output);
+    }
 
-const toggle = document.getElementById('themeToggle');
-toggle.addEventListener('change', () => {
-  document.body.classList.toggle('futurism');
-});
+    function resetResult() {
+      localStorage.removeItem('nutriaxisResult');
+      document.getElementById('result').innerHTML = '';
+    }
 
-window.addEventListener('DOMContentLoaded', () => {
-  const saved = localStorage.getItem('nutriaxisResult');
-  if (saved) {
-    document.getElementById('result').innerHTML = saved;
-  }
-});
+    const toggle = document.getElementById('themeToggle');
+    toggle.addEventListener('change', () => {
+      document.body.classList.toggle('futurism');
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const saved = localStorage.getItem('nutriaxisResult');
+      if (saved) {
+        document.getElementById('result').innerHTML = saved;
+      }
+    });
   </script>
 </body>
 </html>
