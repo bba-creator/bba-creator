@@ -2,17 +2,21 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NutriAxis — Анализ рациона</title>
   <link rel="stylesheet" href="style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
   <header>
     <h1>NutriAxis</h1>
     <nav>
       <a href="index.html">Калькулятор</a> |
-      <a href="analyze.html">Анализ рациона</a>
+      <a href="analyze.html">Анализ рациона</a> |
+      <a href="profile.html">Личный кабинет</a>
+      <button onclick="logout()" style="float:right;">Выйти</button>
     </nav>
     <label class="theme-toggle">
       <input type="checkbox" id="themeToggle" />
@@ -34,21 +38,15 @@
         <button type="button" onclick="analyzeFood()">Анализировать</button>
       </form>
       <div id="analysisResult"></div>
-      <button id="logoutBtn" onclick="logout()" style="margin-top: 24px;">Выйти</button>
     </section>
   </main>
-
   <footer>
     <a href="/legal/disclaimer.html">Отказ от ответственности</a> |
     <a href="/legal/privacy.html">Политика конфиденциальности</a> |
     <a href="/legal/terms.html">Условия использования</a>
   </footer>
-
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script>
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyCptJ1iTweRdZE3hxaepb6Wx2rdhTCYfDo",
       authDomain: "bba-creator.firebaseapp.com",
@@ -60,54 +58,32 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    let currentUser = null;
 
-    firebase.auth().onAuthStateChanged(function(user) {
-      if (!user) {
-        window.location.href = "auth.html";
-      } else {
-        currentUser = user;
-      }
+    firebase.auth().onAuthStateChanged(user => {
+      if (!user) window.location.href = "auth.html";
     });
 
     function analyzeFood() {
-      const text = document.getElementById('foodText').value.trim();
+      const text = document.getElementById('foodText').value;
       const photo = document.getElementById('foodPhoto').files[0];
-      let result = "";
-
-      if (!text && !photo) {
-        result = '<span style="color:#e53935;">Пожалуйста, введите рацион или загрузите фото.</span>';
-      } else if (text) {
-        result = `
-          <b>Пример анализа рациона:</b><br>
-          - Калорийность: ~1650 ккал<br>
-          - Белки: ~90 г, Жиры: ~50 г, Углеводы: ~220 г<br>
-          <span style="color:#bfa800">Рекомендация:</span> Чуть увеличить белки на ужин, добавить листовые овощи, снизить сладкое.<br>
-          <span style="font-size:0.93em; color:#888">В будущем здесь появится детальный анализ из AI по вашему тексту или фото.</span>
-        `;
-        // Сохраняем текст анализа в Firestore (фото — позже)
-        if (currentUser) {
-          db.collection('users').doc(currentUser.uid).collection('analyzes').add({
-            date: new Date().toISOString(),
-            foodText: text,
-            analysis: result
-          });
-        }
-      } else if (photo) {
-        result = "<b>Анализ фото пока в разработке (экспериментально)</b>";
-        // Фото-сохранение можно добавить позже через Storage
-      }
+      let result = "<b>Анализ ещё не подключён.</b> Здесь появится разбор по калориям, макро- и микронутриентам.<br>Для загрузки фото — скоро!";
       document.getElementById('analysisResult').innerHTML = result;
-    }
 
+      // --- Firestore: сохранение анализа ---
+      const user = firebase.auth().currentUser;
+      if (user) {
+        db.collection('users').doc(user.uid).collection('analyzes').add({
+          foodText: text,
+          photoName: photo ? photo.name : "",
+          date: new Date().toISOString()
+        });
+      }
+    }
     function logout() {
-      firebase.auth().signOut().then(() => {
-        window.location.href = "auth.html";
-      });
+      firebase.auth().signOut().then(() => window.location.href = "auth.html");
     }
-
-    const toggle = document.getElementById('themeToggle');
-    toggle.addEventListener('change', () => {
+    // Переключение темы
+    document.getElementById('themeToggle').addEventListener('change', () => {
       document.body.classList.toggle('futurism');
     });
   </script>
