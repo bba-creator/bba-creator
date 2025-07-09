@@ -67,7 +67,7 @@
     <a href="/legal/privacy.html">Политика конфиденциальности</a> |
     <a href="/legal/terms.html">Условия использования</a>
   </footer>
-<script>
+  <script>
 function calculate() {
   const gender = document.getElementById('gender').value;
   const age = +document.getElementById('age').value;
@@ -91,7 +91,7 @@ function calculate() {
   let calories = tdee;
   let deficit = 0;
   if (goal === 'loss') {
-    calories -= 500;
+    calories -= 300; // теперь дефицит -300 ккал
     deficit = tdee - calories;
   }
   if (goal === 'gain') {
@@ -167,6 +167,6 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('result').innerHTML = saved;
   }
 });
-</script>
+  </script>
 </body>
 </html>
