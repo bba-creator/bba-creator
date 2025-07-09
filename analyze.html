@@ -26,16 +26,27 @@
   <main>
     <section class="analyzer">
       <h2>Анализируй свой рацион</h2>
-      <form id="foodForm">
-        <label>
-          Введите свой рацион за день:
-          <textarea id="foodText" rows="4" placeholder="Например: Завтрак: овсянка, банан..."></textarea>
-        </label>
-        <label>
-          <span>Загрузить фото (экспериментально):</span>
-          <input type="file" id="foodPhoto" accept="image/*">
-        </label>
-        <button type="button" onclick="analyzeFood()">Анализировать</button>
+      <form id="foodForm" onsubmit="return false;">
+        <div id="mealsList"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:15px;">
+          <select id="mealType">
+            <option value="Завтрак">Завтрак</option>
+            <option value="Второй завтрак">2-й завтрак</option>
+            <option value="Обед">Обед</option>
+            <option value="Полдник">Полдник</option>
+            <option value="Ужин">Ужин</option>
+          </select>
+          <label>
+            <input type="radio" name="inputType" value="text" checked> Текст
+          </label>
+          <label>
+            <input type="radio" name="inputType" value="photo"> Фото
+          </label>
+          <button type="button" onclick="addMeal()">Добавить</button>
+        </div>
+        <div id="mealInputs" style="margin-top:15px;"></div>
+        <button type="button" onclick="analyzeAllMeals()">Анализировать всё</button>
+        <button type="button" onclick="window.location.href='profile.html'" style="margin-left:10px;">В личный кабинет</button>
       </form>
       <div id="analysisResult"></div>
     </section>
@@ -63,26 +74,98 @@
       if (!user) window.location.href = "auth.html";
     });
 
-    function analyzeFood() {
-      const text = document.getElementById('foodText').value;
-      const photo = document.getElementById('foodPhoto').files[0];
-      let result = "<b>Анализ ещё не подключён.</b> Здесь появится разбор по калориям, макро- и микронутриентам.<br>Для загрузки фото — скоро!";
-      document.getElementById('analysisResult').innerHTML = result;
+    // Массив для хранения приёмов пищи
+    let meals = [];
 
-      // --- Firestore: сохранение анализа ---
-      const user = firebase.auth().currentUser;
-      if (user) {
-        db.collection('users').doc(user.uid).collection('analyzes').add({
-          foodText: text,
-          photoName: photo ? photo.name : "",
-          date: new Date().toISOString()
-        });
+    function addMeal() {
+      const mealType = document.getElementById('mealType').value;
+      const inputType = document.querySelector('input[name="inputType"]:checked').value;
+
+      let mealId = Date.now();
+      let mealHtml = `<div id="meal-${mealId}" style="border:1px solid #eee;padding:8px;margin-bottom:8px;border-radius:6px;">
+        <b>${mealType}</b> (${inputType === 'text' ? 'Текст' : 'Фото'})<br>`;
+      if (inputType === "text") {
+        mealHtml += `<textarea rows="2" style="width:98%;" data-mealtype="${mealType}" data-type="text"></textarea>`;
+      } else {
+        mealHtml += `<input type="file" accept="image/*" data-mealtype="${mealType}" data-type="photo"/>`;
       }
+      mealHtml += ` <button type="button" onclick="removeMeal(${mealId})">Удалить</button></div>`;
+
+      const div = document.createElement('div');
+      div.innerHTML = mealHtml;
+      document.getElementById('mealInputs').appendChild(div);
     }
+
+    function removeMeal(mealId) {
+      const mealElem = document.getElementById('meal-' + mealId);
+      if (mealElem) mealElem.remove();
+    }
+
+    // Анализ всех приёмов пищи
+    async function analyzeAllMeals() {
+      const user = firebase.auth().currentUser;
+      if (!user) return;
+      const inputs = document.querySelectorAll('#mealInputs > div');
+      if (inputs.length === 0) {
+        document.getElementById('analysisResult').innerHTML = "Добавьте хотя бы один приём пищи!";
+        return;
+      }
+      let mealsToSave = [];
+      let aiReport = "";
+      for (const el of inputs) {
+        const textarea = el.querySelector('textarea');
+        const file = el.querySelector('input[type="file"]');
+        const mealType = textarea?.getAttribute('data-mealtype') || file?.getAttribute('data-mealtype');
+        if (textarea) {
+          mealsToSave.push({type:"text", mealType, value:textarea.value});
+          // --- Здесь идёт запрос к OpenAI ChatGPT для анализа ---
+          // await fetchOpenAIAnalysis(textarea.value) ... можно вызвать для каждого текстового блюда
+          aiReport += `<b>${mealType}:</b> <br>${await analyzeWithAI(textarea.value)}<br>`;
+        } else if (file && file.files[0]) {
+          mealsToSave.push({type:"photo", mealType, value:file.files[0].name});
+          aiReport += `<b>${mealType} (фото):</b> <br>AI-анализ по фото — скоро.<br>`;
+        }
+      }
+      // Firestore — сохранить весь рацион дня пользователя
+      await db.collection('users').doc(user.uid).collection('analyzes').add({
+        meals: mealsToSave,
+        date: new Date().toISOString()
+      });
+      document.getElementById('analysisResult').innerHTML =
+        `<h3>AI-анализ рациона</h3>${aiReport}<hr><b>Все данные сохранены!</b>`;
+    }
+
+    // --- Функция анализа через OpenAI (ChatGPT) ---
+    async function analyzeWithAI(foodText) {
+      // Пояснение: ты должна получить свой OpenAI API key и вставить вместо "YOUR_OPENAI_KEY"
+      // Лучше запрос делай через свой backend, чтобы не светить ключ на клиенте!
+      const OPENAI_API_KEY = "YOUR_OPENAI_KEY";
+      if (OPENAI_API_KEY === "YOUR_OPENAI_KEY") {
+        return "(AI-ответ не подключён: укажите свой OpenAI API KEY в коде!)";
+      }
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + OPENAI_API_KEY
+        },
+        body: JSON.stringify({
+          model: "gpt-4o",
+          messages: [
+            {role: "system", content: "Ты профессиональный нутрициолог. Анализируй рацион, выводи подробно калорийность, БЖУ, макро и микронутриенты, давай рекомендации и только научно обоснованные замечания. Не выдумывай значения! Если не хватает данных — укажи это."},
+            {role: "user", content: foodText}
+          ],
+          temperature: 0.2,
+          max_tokens: 600
+        })
+      });
+      const data = await response.json();
+      return data.choices?.[0]?.message?.content || "Ошибка AI-анализа.";
+    }
+
     function logout() {
       firebase.auth().signOut().then(() => window.location.href = "auth.html");
     }
-    // Переключение темы
     document.getElementById('themeToggle').addEventListener('change', () => {
       document.body.classList.toggle('futurism');
     });
