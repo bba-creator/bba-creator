@@ -67,9 +67,7 @@
     <a href="/legal/privacy.html">Политика конфиденциальности</a> |
     <a href="/legal/terms.html">Условия использования</a>
   </footer>
-
-  <script>
-   <script>
+<script>
 function calculate() {
   const gender = document.getElementById('gender').value;
   const age = +document.getElementById('age').value;
@@ -134,8 +132,41 @@ function calculate() {
   } else if (goal === 'gain') {
     deficitText = `Профицит: ${Math.round(deficit)} ккал`;
   } else {
-    deficitText = `Подде
+    deficitText = `Поддержание текущего веса (дефицита нет)`;
+  }
+  output += `<br><span style="font-size:0.98em; color:#888">${deficitText}</span>`;
 
-  </script>
+  if (showDetails) {
+    output += `
+      <hr>
+      <strong>Подробности расчёта:</strong><br>
+      BMR (основной обмен): ${Math.round(bmr)} ккал<br>
+      TDEE (с учётом активности): ${Math.round(tdee)} ккал<br>
+      Цель: ${goal === 'loss' ? 'Похудение' : goal === 'gain' ? 'Набор массы' : 'Поддержание'}<br>
+      Итоговая калорийность: ${Math.round(calories)} ккал
+    `;
+  }
+
+  document.getElementById('result').innerHTML = output;
+  localStorage.setItem('nutriaxisResult', output);
+}
+
+function resetResult() {
+  localStorage.removeItem('nutriaxisResult');
+  document.getElementById('result').innerHTML = '';
+}
+
+const toggle = document.getElementById('themeToggle');
+toggle.addEventListener('change', () => {
+  document.body.classList.toggle('futurism');
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('nutriaxisResult');
+  if (saved) {
+    document.getElementById('result').innerHTML = saved;
+  }
+});
+</script>
 </body>
 </html>
