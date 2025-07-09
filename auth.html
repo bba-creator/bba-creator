@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>NutriAxis — Вход</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+</head>
+<body>
+  <main>
+    <section style="max-width: 400px; margin: 4rem auto; padding: 2rem; background: #fff; border-radius: 12px; box-shadow: 0 2px 16px #0001;">
+      <h2 style="text-align:center; margin-bottom:2rem;">Вход / Регистрация</h2>
+      <form id="authForm" autocomplete="on" onsubmit="return false;">
+        <input type="email" id="email" placeholder="Email" required autofocus style="margin-bottom:12px;width:100%;padding:0.8em;"><br>
+        <input type="password" id="password" placeholder="Пароль" required style="margin-bottom:12px;width:100%;padding:0.8em;"><br>
+        <button type="button" onclick="signIn()" style="width:49%;">Войти</button>
+        <button type="button" onclick="signUp()" style="width:49%;">Регистрация</button>
+        <div id="authMessage" style="margin-top:1.5em;text-align:center;"></div>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    // Firebase config (тот же, что и на остальных страницах)
+    const firebaseConfig = {
+      apiKey: "AIzaSyCptJ1iTweRdZE3hxaepb6Wx2rdhTCYfDo",
+      authDomain: "bba-creator.firebaseapp.com",
+      projectId: "bba-creator",
+      storageBucket: "bba-creator.appspot.com",
+      messagingSenderId: "141640866350",
+      appId: "1:141640866350:web:bca3f1d2278165837e1dbf",
+      measurementId: "G-FEKG0B970P"
+    };
+    // Инициализация только если не было ранее
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+
+    // Регистрация
+    function signUp() {
+      setLoading("Регистрация...");
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      firebase.auth().createUserWithEmailAndPassword(email, password)
+        .then(() => {
+          showSuccess("Регистрация успешна! Выполняется вход...");
+          setTimeout(() => {
+            location.href = "index.html";
+          }, 800);
+        })
+        .catch(showError);
+    }
+
+    // Вход
+    function signIn() {
+      setLoading("Вход...");
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      firebase.auth().signInWithEmailAndPassword(email, password)
+        .then(() => {
+          showSuccess("Вход выполнен! Перенаправление...");
+          setTimeout(() => {
+            location.href = "index.html";
+          }, 700);
+        })
+        .catch(showError);
+    }
+
+    // Вспомогательные функции для UX
+    function setLoading(msg) {
+      document.getElementById('authMessage').innerHTML = `<span style="color:#09c">${msg}</span>`;
+    }
+    function showSuccess(msg) {
+      document.getElementById('authMessage').innerHTML = `<span style="color:#28a745;">${msg}</span>`;
+    }
+    function showError(error) {
+      let msg = error.message || error;
+      // Короткая обработка типичных ошибок Firebase
+      if (msg.includes('already')) msg = "Пользователь с этим email уже зарегистрирован.";
+      if (msg.includes('least 6 characters')) msg = "Пароль должен содержать не менее 6 символов.";
+      if (msg.includes('badly formatted')) msg = "Некорректный email.";
+      document.getElementById('authMessage').innerHTML = `<span style="color:#e53935">${msg}</span>`;
+    }
+
+    // Фокус на email при загрузке
+    window.onload = () => {
+      document.getElementById('email').focus();
+    }
+  </script>
+</body>
+</html>
