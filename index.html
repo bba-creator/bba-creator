@@ -2,42 +2,35 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NutriAxis</title>
-  <meta name="description" content="NutriAxis — платформа сбалансированного питания и тренировок, учитывающая женский цикл, здоровье и цели.">
+  <title>NutriAxis — Калькулятор КБЖУ</title>
   <link rel="stylesheet" href="style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
   <header>
     <h1>NutriAxis</h1>
-    <p class="tagline">Осознанный баланс. Персонально для тебя.</p>
     <label class="theme-toggle">
       <input type="checkbox" id="themeToggle" />
       <span>Сменить стиль</span>
     </label>
+    <button onclick="logout()" style="float:right;">Выйти</button>
   </header>
-
   <main>
     <section class="calculator">
       <h2>Калькулятор КБЖУ</h2>
-
-      <label>
-        <input type="checkbox" id="showDetails" />
-        Показать подробности расчёта
-      </label>
-
+      <label><input type="checkbox" id="showDetails" />Показать подробности расчёта</label>
       <label>Пол:
         <select id="gender">
           <option value="female">Женщина</option>
           <option value="male">Мужчина</option>
         </select>
       </label>
-
       <label>Возраст: <input type="number" id="age"></label>
       <label>Рост (см): <input type="number" id="height"></label>
       <label>Вес (кг): <input type="number" id="weight"></label>
-
       <label>Физическая активность:
         <select id="activity">
           <option value="1.2">Минимальная (сидячая работа)</option>
@@ -47,7 +40,6 @@
           <option value="1.9">Очень высокая (тяжёлая физ. работа)</option>
         </select>
       </label>
-
       <label>Цель:
         <select id="goal">
           <option value="loss">Похудение</option>
@@ -55,26 +47,19 @@
           <option value="gain">Набор массы</option>
         </select>
       </label>
-
       <button onclick="calculate()">Рассчитать</button>
       <button class="reset-btn" onclick="resetResult()">Сбросить</button>
       <div id="result"></div>
       <button id="nextStepBtn" style="display:none;" onclick="goToAnalyze()">Далее → Анализ рациона</button>
-      <button id="logoutBtn" onclick="logout()" style="margin-top: 24px;">Выйти</button>
     </section>
   </main>
-
   <footer>
     <a href="/legal/disclaimer.html">Отказ от ответственности</a> |
     <a href="/legal/privacy.html">Политика конфиденциальности</a> |
     <a href="/legal/terms.html">Условия использования</a>
   </footer>
-
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script>
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyCptJ1iTweRdZE3hxaepb6Wx2rdhTCYfDo",
       authDomain: "bba-creator.firebaseapp.com",
@@ -86,14 +71,9 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    let currentUser = null;
 
-    firebase.auth().onAuthStateChanged(function(user) {
-      if (!user) {
-        window.location.href = "auth.html";
-      } else {
-        currentUser = user;
-      }
+    firebase.auth().onAuthStateChanged(user => {
+      if (!user) window.location.href = "auth.html";
     });
 
     function calculate() {
@@ -111,24 +91,11 @@
       } else {
         bmr = 10 * weight + 6.25 * height - 5 * age + 5;
       }
-
       const tdee = bmr * activity;
-      let calories = tdee;
-      let deficit = 0;
-      if (goal === 'loss') {
-        calories -= 300;
-        deficit = tdee - calories;
-      }
-      if (goal === 'gain') {
-        calories += 300;
-        deficit = calories - tdee;
-      }
-      if (goal === 'maintain') {
-        deficit = 0;
-      }
-
-      const protein = weight * 1.5;
-      const fat = weight * 0.8;
+      let calories = tdee, deficit = 0;
+      if (goal === 'loss') { calories -= 300; deficit = tdee - calories; }
+      if (goal === 'gain') { calories += 300; deficit = calories - tdee; }
+      const protein = weight * 1.5, fat = weight * 0.8;
       const carbs = (calories - (protein * 4 + fat * 9)) / 4;
 
       let output = `
@@ -148,39 +115,32 @@
         `;
       }
       let deficitText = "";
-      if (goal === 'loss') {
-        deficitText = `Дефицит: ${Math.round(deficit)} ккал`;
-      } else if (goal === 'gain') {
-        deficitText = `Профицит: ${Math.round(deficit)} ккал`;
-      } else {
-        deficitText = `Поддержание текущего веса (дефицита нет)`;
-      }
+      if (goal === 'loss') deficitText = `Дефицит: ${Math.round(deficit)} ккал`;
+      else if (goal === 'gain') deficitText = `Профицит: ${Math.round(deficit)} ккал`;
+      else deficitText = `Поддержание текущего веса (дефицита нет)`;
       output += `<br><span style="font-size:0.98em; color:#888">${deficitText}</span>`;
+
       if (showDetails) {
         output += `
           <hr>
           <strong>Подробности расчёта:</strong><br>
-          BMR (основной обмен): ${Math.round(bmr)} ккал<br>
-          TDEE (с учётом активности): ${Math.round(tdee)} ккал<br>
+          BMR: ${Math.round(bmr)} ккал<br>
+          TDEE: ${Math.round(tdee)} ккал<br>
           Цель: ${goal === 'loss' ? 'Похудение' : goal === 'gain' ? 'Набор массы' : 'Поддержание'}<br>
           Итоговая калорийность: ${Math.round(calories)} ккал
         `;
       }
       document.getElementById('result').innerHTML = output;
-
-      // Показываем кнопку "Далее"
       document.getElementById('nextStepBtn').style.display = "inline-block";
-
-      // Сохраняем в Firestore
-      if (currentUser) {
-        db.collection('users').doc(currentUser.uid).collection('calculations').add({
-          date: new Date().toISOString(),
-          gender, age, height, weight, activity, goal,
+      // --- Firestore: сохранение результата ---
+      const user = firebase.auth().currentUser;
+      if (user) {
+        db.collection('users').doc(user.uid).collection('calculations').add({
           calories: Math.round(calories),
           protein: Math.round(protein),
           fat: Math.round(fat),
           carbs: Math.round(carbs),
-          details: output
+          date: new Date().toISOString()
         });
       }
     }
@@ -189,19 +149,15 @@
       document.getElementById('result').innerHTML = '';
       document.getElementById('nextStepBtn').style.display = "none";
     }
-
     function goToAnalyze() {
       window.location.href = "analyze.html";
     }
-
     function logout() {
-      firebase.auth().signOut().then(() => {
-        window.location.href = "auth.html";
-      });
+      firebase.auth().signOut().then(() => window.location.href = "auth.html");
     }
 
-    const toggle = document.getElementById('themeToggle');
-    toggle.addEventListener('change', () => {
+    // Переключение темы
+    document.getElementById('themeToggle').addEventListener('change', () => {
       document.body.classList.toggle('futurism');
     });
   </script>
