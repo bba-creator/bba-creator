@@ -2,29 +2,27 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>NutriAxis — Вход / Регистрация</title>
+  <title>NutriAxis — Вход</title>
   <link rel="stylesheet" href="style.css" />
-  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
   <main>
     <section>
       <h2>Вход / Регистрация</h2>
-      <form id="authForm" onsubmit="return false;">
+      <form id="authForm">
         <input type="email" id="email" placeholder="Email" required><br>
         <input type="password" id="password" placeholder="Пароль" required><br>
         <button type="button" onclick="signIn()">Войти</button>
         <button type="button" onclick="signUp()">Регистрация</button>
-        <button type="button" onclick="resetPassword()">Забыли пароль?</button>
         <div id="authMessage"></div>
       </form>
     </section>
   </main>
+
   <script>
-    // Firebase config
+    // Firebase config (тот же, что и на остальных страницах)
     const firebaseConfig = {
       apiKey: "AIzaSyCptJ1iTweRdZE3hxaepb6Wx2rdhTCYfDo",
       authDomain: "bba-creator.firebaseapp.com",
@@ -35,22 +33,22 @@
       measurementId: "G-FEKG0B970P"
     };
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+
+    // Перенаправление, если пользователь уже авторизован
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        window.location.href = "profile.html";
+      }
+    });
 
     // Регистрация
     function signUp() {
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
       firebase.auth().createUserWithEmailAndPassword(email, password)
-        .then((userCredential) => {
-          document.getElementById('authMessage').innerHTML = 'Регистрация успешна! Вход...';
-          // Сохраняем профиль пользователя в Firestore (минимум)
-          db.collection('users').doc(userCredential.user.uid).set({
-            email: email,
-            created: new Date().toISOString(),
-            isAdmin: false
-          });
-          setTimeout(() => location.href = "index.html", 1200);
+        .then(() => {
+          document.getElementById('authMessage').innerHTML = 'Регистрация успешна!';
+          setTimeout(() => window.location.href = "profile.html", 1000);
         })
         .catch((error) => {
           document.getElementById('authMessage').innerHTML = error.message;
@@ -64,35 +62,12 @@
       firebase.auth().signInWithEmailAndPassword(email, password)
         .then(() => {
           document.getElementById('authMessage').innerHTML = 'Вход выполнен!';
-          setTimeout(() => location.href = "index.html", 900);
+          setTimeout(() => window.location.href = "profile.html", 700);
         })
         .catch((error) => {
           document.getElementById('authMessage').innerHTML = error.message;
         });
     }
-
-    // Сброс пароля
-    function resetPassword() {
-      const email = document.getElementById('email').value;
-      if (!email) {
-        document.getElementById('authMessage').innerHTML = "Введите email для сброса пароля.";
-        return;
-      }
-      firebase.auth().sendPasswordResetEmail(email)
-        .then(() => {
-          document.getElementById('authMessage').innerHTML = "Письмо для сброса пароля отправлено!";
-        })
-        .catch((error) => {
-          document.getElementById('authMessage').innerHTML = error.message;
-        });
-    }
-
-    // Проверка входа и редирект если уже залогинен
-    firebase.auth().onAuthStateChanged(function(user) {
-      if (user) {
-        setTimeout(() => location.href = "index.html", 500);
-      }
-    });
   </script>
 </body>
 </html>
