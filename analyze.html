@@ -1,83 +1,64 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NutriAxis — Анализ рациона</title>
-  <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
-</head>
-<body>
-  <header>
-    <h1>NutriAxis</h1>
-    <nav>
-      <a href="index.html">Калькулятор</a> |
-      <a href="analyze.html">Анализ рациона</a>
-    </nav>
-    <label class="theme-toggle">
-      <input type="checkbox" id="themeToggle" />
-      <span>Сменить стиль</span>
-    </label>
-  </header>
-  <main>
-    <section class="analyzer">
-      <h2>Анализируй свой рацион</h2>
-      <form id="foodForm">
-        <label>
-          Введите свой рацион за день:
-          <textarea id="foodText" rows="4" placeholder="Например: Завтрак: овсянка, банан..."></textarea>
-        </label>
-        <label>
-          <span>Загрузить фото (экспериментально):</span>
-          <input type="file" id="foodPhoto" accept="image/*">
-        </label>
-        <button type="button" onclick="analyzeFood()">Анализировать</button>
-      </form>
-      <div id="analysisResult"></div>
-    </section>
-  </main>
+<!-- ... head ... -->
+<!-- Firebase CDN скрипты -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCptJ1iTweRdZE3hxaepb6Wx2rdhTCYfDo",
+  authDomain: "bba-creator.firebaseapp.com",
+  projectId: "bba-creator",
+  storageBucket: "bba-creator.appspot.com",
+  messagingSenderId: "141640866350",
+  appId: "1:141640866350:web:bca3f1d2278165837e1dbf",
+  measurementId: "G-FEKG0B970P"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+let currentUser = null;
 
-  <footer>
-    <a href="/legal/disclaimer.html">Отказ от ответственности</a> |
-    <a href="/legal/privacy.html">Политика конфиденциальности</a> |
-    <a href="/legal/terms.html">Условия использования</a>
-  </footer>
+// Проверка входа пользователя
+firebase.auth().onAuthStateChanged(function(user) {
+  if (!user) {
+    window.location.href = "auth.html";
+  } else {
+    currentUser = user;
+  }
+});
 
-  <!-- --- Firebase CDN скрипты (точно такие же как на index.html) --- -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script>
-    // Firebase config и инициализация
-    const firebaseConfig = {
-      apiKey: "AIzaSyCptJ1iTweRdZE3hxaepb6Wx2rdhTCYfDo",
-      authDomain: "bba-creator.firebaseapp.com",
-      projectId: "bba-creator",
-      storageBucket: "bba-creator.appspot.com",
-      messagingSenderId: "141640866350",
-      appId: "1:141640866350:web:bca3f1d2278165837e1dbf",
-      measurementId: "G-FEKG0B970P"
-    };
-    firebase.initializeApp(firebaseConfig);
-    // const db = firebase.firestore(); // если понадобится Firestore
-  </script>
-  <script>
-    // Переключение темы
-    const toggle = document.getElementById('themeToggle');
-    toggle.addEventListener('change', () => {
-      document.body.classList.toggle('futurism');
-    });
+// Анализ рациона и сохранение
+function analyzeFood() {
+  const text = document.getElementById('foodText').value.trim();
+  const photo = document.getElementById('foodPhoto').files[0];
+  let result = "";
 
-    // Форма анализа
-    function analyzeFood() {
-      const text = document.getElementById('foodText').value;
-      const photo = document.getElementById('foodPhoto').files[0];
-
-      // Здесь будет обработка текста или фото (интеграция с ChatGPT/AI)
-      let result = "<b>Анализ ещё не подключён.</b> Здесь появится разбор по калориям, макро- и микронутриентам.<br>Для загрузки фото — скоро!";
-      document.getElementById('analysisResult').innerHTML = result;
+  if (!text && !photo) {
+    result = '<span style="color:#e53935;">Пожалуйста, введите рацион или загрузите фото.</span>';
+  } else if (text) {
+    result = `
+      <b>Пример анализа рациона:</b><br>
+      - Калорийность: ~1650 ккал<br>
+      - Белки: ~90 г, Жиры: ~50 г, Углеводы: ~220 г<br>
+      <span style="color:#bfa800">Рекомендация:</span> Чуть увеличить белки на ужин, добавить листовые овощи, снизить сладкое.<br>
+      <span style="font-size:0.93em; color:#888">В будущем здесь появится детальный анализ из AI по вашему тексту или фото.</span>
+    `;
+    // Сохраняем текст анализа в Firestore (фото — позже)
+    if (currentUser) {
+      db.collection('users').doc(currentUser.uid).collection('analyzes').add({
+        date: new Date().toISOString(),
+        foodText: text,
+        analysis: result
+      });
     }
-  </script>
-</body>
-</html>
-``
+  } else if (photo) {
+    result = "<b>Анализ фото пока в разработке (экспериментально)</b>";
+    // Фото-сохранение позже (через Firebase Storage)
+  }
+  document.getElementById('analysisResult').innerHTML = result;
+}
+
+const toggle = document.getElementById('themeToggle');
+toggle.addEventListener('change', () => {
+  document.body.classList.toggle('futurism');
+});
+</script>
