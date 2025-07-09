@@ -12,6 +12,11 @@
   <header>
     <h1>NutriAxis</h1>
     <p class="tagline">Осознанный баланс. Персонально для тебя.</p>
+    <nav>
+      <a href="index.html">Калькулятор</a> |
+      <a href="analyze.html">Анализ рациона</a>
+      <button id="signOutBtn" style="float:right; margin-left:20px;" onclick="signOut()">Выйти</button>
+    </nav>
     <label class="theme-toggle">
       <input type="checkbox" id="themeToggle" />
       <span>Сменить стиль</span>
@@ -21,23 +26,19 @@
   <main>
     <section class="calculator">
       <h2>Калькулятор КБЖУ</h2>
-
       <label>
         <input type="checkbox" id="showDetails" />
         Показать подробности расчёта
       </label>
-
       <label>Пол:
         <select id="gender">
           <option value="female">Женщина</option>
           <option value="male">Мужчина</option>
         </select>
       </label>
-
       <label>Возраст: <input type="number" id="age"></label>
       <label>Рост (см): <input type="number" id="height"></label>
       <label>Вес (кг): <input type="number" id="weight"></label>
-
       <label>Физическая активность:
         <select id="activity">
           <option value="1.2">Минимальная (сидячая работа)</option>
@@ -47,7 +48,6 @@
           <option value="1.9">Очень высокая (тяжёлая физ. работа)</option>
         </select>
       </label>
-
       <label>Цель:
         <select id="goal">
           <option value="loss">Похудение</option>
@@ -55,10 +55,10 @@
           <option value="gain">Набор массы</option>
         </select>
       </label>
-
       <button onclick="calculate()">Рассчитать</button>
       <button class="reset-btn" onclick="resetResult()">Сбросить</button>
       <div id="result"></div>
+      <button id="nextStepBtn" style="display:none; margin-top:18px;" onclick="goToAnalyze()">Далее → Анализ рациона</button>
     </section>
   </main>
 
@@ -73,7 +73,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script>
-    // ВАЖНО: storageBucket должен быть "bba-creator.appspot.com"
+    // Firebase конфиг
     const firebaseConfig = {
       apiKey: "AIzaSyCptJ1iTweRdZE3hxaepb6Wx2rdhTCYfDo",
       authDomain: "bba-creator.firebaseapp.com",
@@ -84,11 +84,21 @@
       measurementId: "G-FEKG0B970P"
     };
     firebase.initializeApp(firebaseConfig);
-    // Firestore и Auth готовы к использованию (если потребуется)
-    // Пример: const db = firebase.firestore();
-  </script>
 
-  <script>
+    // Проверка, вошёл ли пользователь (Firebase Auth)
+    firebase.auth().onAuthStateChanged(function(user) {
+      if (!user) {
+        window.location.href = "auth.html";
+      }
+    });
+
+    // Выйти
+    function signOut() {
+      firebase.auth().signOut().then(() => {
+        window.location.href = "auth.html";
+      });
+    }
+
     function calculate() {
       const gender = document.getElementById('gender').value;
       const age = +document.getElementById('age').value;
@@ -170,11 +180,19 @@
 
       document.getElementById('result').innerHTML = output;
       localStorage.setItem('nutriaxisResult', output);
+
+      // ПОСЛЕ расчёта показываем кнопку "Далее"
+      document.getElementById('nextStepBtn').style.display = "inline-block";
+    }
+
+    function goToAnalyze() {
+      window.location.href = "analyze.html";
     }
 
     function resetResult() {
       localStorage.removeItem('nutriaxisResult');
       document.getElementById('result').innerHTML = '';
+      document.getElementById('nextStepBtn').style.display = "none";
     }
 
     const toggle = document.getElementById('themeToggle');
@@ -186,6 +204,7 @@
       const saved = localStorage.getItem('nutriaxisResult');
       if (saved) {
         document.getElementById('result').innerHTML = saved;
+        document.getElementById('nextStepBtn').style.display = "inline-block";
       }
     });
   </script>
