@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>NutriAxis — Admin Panel</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <main>
+    <h2>NutriAxis — Admin Panel</h2>
+    <div id="adminMessage"></div>
+    <div id="usersList"></div>
+    <button onclick="logout()">Выйти</button>
+  </main>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCptJ1iTweRdZE3hxaepb6Wx2rdhTCYfDo",
+      authDomain: "bba-creator.firebaseapp.com",
+      projectId: "bba-creator",
+      storageBucket: "bba-creator.appspot.com",
+      messagingSenderId: "141640866350",
+      appId: "1:141640866350:web:bca3f1d2278165837e1dbf",
+      measurementId: "G-FEKG0B970P"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Проверка роли администратора
+    firebase.auth().onAuthStateChanged(async function(user) {
+      if (!user) {
+        window.location.href = "auth.html";
+        return;
+      }
+      const userDoc = await db.collection('users').doc(user.uid).get();
+      if (!userDoc.exists || !userDoc.data().isAdmin) {
+        document.getElementById('adminMessage').innerHTML = "Нет прав администратора.";
+        return;
+      }
+      loadAllUsers();
+    });
+
+    // Загрузка всех пользователей и их дневников
+    async function loadAllUsers() {
+      const usersSnap = await db.collection('users').get();
+      let html = "<h3>Пользователи:</h3><ul>";
+      for (const doc of usersSnap.docs) {
+        const user = doc.data();
+        html += `<li><b>${user.email}</b><ul id="user-${doc.id}"></ul></li>`;
+        // Загрузить дневники пользователя
+        loadUserJournals(doc.id);
+      }
+      html += "</ul>";
+      document.getElementById('usersList').innerHTML = html;
+    }
+
+    async function loadUserJournals(uid) {
+      // Выводим калькуляции
+      const calcSnap = await db.collection('users').doc(uid).collection('calculations').orderBy("date", "desc").get();
+      let calcHtml = "<li><u>Калькулятор:</u><ul>";
+      calcSnap.forEach(entry => {
+        calcHtml += `<li>${entry.data().date.slice(0,10)}: ${entry.data().calories} ккал, Б:${entry.data().protein}, Ж:${entry.data().fat}, У:${entry.data().carbs}</li>`;
+      });
+      calcHtml += "</ul></li>";
+      // Выводим анализы рациона
+      const foodSnap = await db.collection('users').doc(uid).collection('analyzes').orderBy("date", "desc").get();
+      let foodHtml = "<li><u>Анализы:</u><ul>";
+      foodSnap.forEach(entry => {
+        foodHtml += `<li>${entry.data().date.slice(0,10)}: ${entry.data().foodText ? entry.data().foodText.slice(0, 60) + '...' : '(фото)'} </li>`;
+      });
+      foodHtml += "</ul></li>";
+
+      document.getElementById("user-" + uid).innerHTML = calcHtml + foodHtml;
+    }
+
+    function logout() {
+      firebase.auth().signOut().then(() => {
+        window.location.href = "auth.html";
+      });
+    }
+  </script>
+</body>
+</html>
