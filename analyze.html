@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NutriAxis — Анализ рациона</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header>
+    <h1>NutriAxis</h1>
+    <nav>
+      <a href="index.html">Калькулятор</a> |
+      <a href="analyze.html">Анализ рациона</a>
+    </nav>
+    <label class="theme-toggle">
+      <input type="checkbox" id="themeToggle" />
+      <span>Сменить стиль</span>
+    </label>
+  </header>
+  <main>
+    <section class="analyzer">
+      <h2>Анализ вашего рациона</h2>
+      <form id="dietForm">
+        <label>
+          <b>Вариант 1. Опишите свой рацион за день (желательно подробно):</b><br>
+          <textarea id="dietText" rows="6" placeholder="Например: завтрак — овсянка на молоке, банан, кофе; обед — куриная грудка, гречка, овощи..."></textarea>
+        </label>
+        <div style="margin: 1em 0; color: #888;">
+          <b>ИЛИ</b>
+        </div>
+        <label>
+          <b>Вариант 2. Загрузите фото вашего приёма пищи или списка продуктов:</b>
+          <span style="font-size: 0.95em; color: #bfa800;">Экспериментально: качество анализа по фото зависит от чёткости снимка</span><br>
+          <input type="file" id="dietImage" accept="image/*">
+        </label>
+        <div style="margin-top:1em;">
+          <input type="checkbox" id="consent" required>
+          <label for="consent" style="font-size:0.95em;">Я соглашаюсь на обработку и анализ моих данных с помощью AI</label>
+        </div>
+        <button type="submit" style="margin-top:1em;">Анализировать</button>
+      </form>
+      <div id="dietResult"></div>
+    </section>
+  </main>
+  <footer>
+    <a href="/legal/disclaimer.html">Отказ от ответственности</a> |
+    <a href="/legal/privacy.html">Политика конфиденциальности</a> |
+    <a href="/legal/terms.html">Условия использования</a>
+  </footer>
+  <script src="analyze.js"></script>
+  <script>
+    // Переключение тем
+    const toggle = document.getElementById('themeToggle');
+    toggle.addEventListener('change', () => {
+      document.body.classList.toggle('futurism');
+    });
+  </script>
+</body>
+</html>
